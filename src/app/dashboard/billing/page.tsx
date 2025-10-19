@@ -10,8 +10,8 @@ import { api, apiRequest } from '@/lib/api-client'
 import { CreatePatientData } from '@/lib/types'
 import { useCurrency } from '@/components/CurrencySettings'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import ConfirmationPopup from '@/components/ui/ConfirmationPopup'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 import { FileText, Download, Send, CheckCircle, Clock, AlertCircle, Search, Plus, User, X, Edit, Save, Package, Trash2 } from 'lucide-react'
 
 export default function BillingPage() {
@@ -38,10 +38,7 @@ export default function BillingPage() {
   const [visitNotes, setVisitNotes] = useState('')
   const [editingBill, setEditingBill] = useState<string | null>(null)
   const [editAmount, setEditAmount] = useState('')
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null)
-  const [showItemDeleteConfirm, setShowItemDeleteConfirm] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<{id: string; description: string} | null>(null)
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog()
   const [showInventorySelection, setShowInventorySelection] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<Array<{
     product_id: string;
@@ -260,15 +257,14 @@ export default function BillingPage() {
   }
 
   const handleDeleteItemClick = (itemId: string, itemDescription: string) => {
-    setItemToDelete({ id: itemId, description: itemDescription })
-    setShowItemDeleteConfirm(true)
-  }
-
-  const handleConfirmDeleteItem = () => {
-    if (itemToDelete) {
-      deleteBillItemMutation.mutate(itemToDelete.id)
-      setItemToDelete(null)
-    }
+    showConfirm({
+      title: 'Delete Bill Item',
+      message: `Are you sure you want to delete "${itemDescription}" from this bill?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: () => deleteBillItemMutation.mutate(itemId)
+    })
   }
 
   const handleSaveInventoryItems = async () => {
@@ -1060,37 +1056,17 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Unified Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          if (deleteTarget) {
-            // Add delete logic here if needed
-            setShowDeleteConfirm(false)
-            setDeleteTarget(null)
-          }
-        }}
-        title="Delete Confirmation"
-        message={`Are you sure you want to delete ${deleteTarget?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
-
-      {/* Item Delete Confirmation Popup */}
-      <ConfirmationPopup
-        isOpen={showItemDeleteConfirm}
-        onClose={() => {
-          setShowItemDeleteConfirm(false)
-          setItemToDelete(null)
-        }}
-        onConfirm={handleConfirmDeleteItem}
-        title="Remove Item from Bill"
-        message={`Are you sure you want to remove "${itemToDelete?.description}" from the bill? This action cannot be undone.`}
-        confirmText="Remove Item"
-        cancelText="Cancel"
-        type="danger"
+        isOpen={dialogState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        isLoading={dialogState.isLoading}
       />
 
       {/* Toast Notifications */}

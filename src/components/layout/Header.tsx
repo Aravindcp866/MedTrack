@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Header() {
   const router = useRouter()
@@ -22,23 +23,24 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
               Welcome to ClinicSync
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Secure clinic management system
             </p>
           </div>
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {user?.email || 'User'}
               </p>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                 {user?.role || 'User'}
               </p>
             </div>
@@ -47,7 +49,7 @@ export default function Header() {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout

@@ -9,6 +9,8 @@ import { useCurrency } from '@/components/CurrencySettings'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
 import { Plus, IndianRupee , Tag, BarChart3 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 
 export default function ExpensesPage() {
   const { formatPrice } = useCurrency()
@@ -22,6 +24,7 @@ export default function ExpensesPage() {
   })
 
   const queryClient = useQueryClient()
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog()
 
   const { data: expenses, isLoading } = useQuery({
     queryKey: ['expenses'],
@@ -80,9 +83,15 @@ export default function ExpensesPage() {
   })
 
   const handleDelete = (expenseId: string) => {
-    if (confirm('Are you sure you want to delete this expense? This action cannot be undone.')) {
-      deleteExpenseMutation.mutate(expenseId)
-    }
+    const expense = expenses?.find(e => e.id === expenseId)
+    showConfirm({
+      title: 'Delete Expense',
+      message: `Are you sure you want to delete "${expense?.description}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: () => deleteExpenseMutation.mutate(expenseId)
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -383,6 +392,18 @@ export default function ExpensesPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={dialogState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        isLoading={dialogState.isLoading}
+      />
     </div>
   )
 }

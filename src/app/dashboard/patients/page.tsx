@@ -8,12 +8,12 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
 import { Plus, Users, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 
 export default function PatientsPage() {
   const { toasts, success, error, removeToast } = useToast()
   const [showAddForm, setShowAddForm] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null)
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog()
   const [newPatient, setNewPatient] = useState<CreatePatientData>({
     first_name: '',
     last_name: '',
@@ -74,16 +74,14 @@ export default function PatientsPage() {
   })
 
   const handleDelete = (patientId: string, patientName: string) => {
-    setDeleteTarget({ id: patientId, name: patientName })
-    setShowDeleteConfirm(true)
-  }
-
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      deletePatientMutation.mutate(deleteTarget.id)
-      setShowDeleteConfirm(false)
-      setDeleteTarget(null)
-    }
+    showConfirm({
+      title: 'Delete Patient',
+      message: `Are you sure you want to delete "${patientName}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: () => deletePatientMutation.mutate(patientId)
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -344,17 +342,17 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDelete}
-        title="Delete Patient"
-        message={`Are you sure you want to delete ${deleteTarget?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-        isLoading={deletePatientMutation.isPending}
+        isOpen={dialogState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        isLoading={dialogState.isLoading}
       />
 
       {/* Toast Notifications */}

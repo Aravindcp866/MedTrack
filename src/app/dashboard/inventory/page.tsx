@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProducts, createProduct, deleteProduct, updateProduct } from '@/lib/api/products'
 import { CreateProductData } from '@/lib/types'
 import { Plus, Package, AlertTriangle, Edit, Save, X } from 'lucide-react'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
 
 export default function InventoryPage() {
   const [showAddForm, setShowAddForm] = useState(false)
@@ -21,6 +23,7 @@ export default function InventoryPage() {
   })
 
   const queryClient = useQueryClient()
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog()
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
@@ -61,9 +64,15 @@ export default function InventoryPage() {
   })
 
   const handleDelete = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      deleteProductMutation.mutate(productId)
-    }
+    const product = products?.find(p => p.id === productId)
+    showConfirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to delete "${product?.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: () => deleteProductMutation.mutate(productId)
+    })
   }
 
   const handleEditStock = (product: {id: string; stock_quantity: number}) => {
@@ -333,6 +342,18 @@ export default function InventoryPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={dialogState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        isLoading={dialogState.isLoading}
+      />
     </div>
   )
 }

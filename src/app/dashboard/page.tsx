@@ -3,8 +3,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api-client'
 import { 
-  BarChart, 
-  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -155,10 +153,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Overview of your clinic&apos;s performance</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Overview of your clinic&apos;s performance</p>
         <div className="mt-4">
           <ConnectionTest />
         </div>
@@ -166,18 +164,18 @@ export default function Dashboard() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((revenueStats?.monthlyRevenue || 0) / 100)}
               </p>
               <div className="flex items-center mt-1">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   Treatments: {formatPrice((revenueStats?.treatmentRevenue || 0) / 100)} |
                   Inventory: {formatPrice((revenueStats?.inventoryRevenue || 0) / 100)}
                 </span>
@@ -249,14 +247,30 @@ export default function Dashboard() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue vs Expenses</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
+            <LineChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis tickFormatter={(value) => formatPrice(Number(value) / 100)} />
               <Tooltip formatter={(value) => [formatPrice(Number(value) / 100), '']} />
-              <Bar dataKey="revenue" fill="#4f46e5" name="Revenue" />
-              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-            </BarChart>
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#4f46e5" 
+                strokeWidth={3}
+                name="Revenue" 
+                dot={{ fill: '#4f46e5', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="expenses" 
+                stroke="#ef4444" 
+                strokeWidth={3}
+                name="Expenses" 
+                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
 
@@ -288,7 +302,8 @@ export default function Dashboard() {
                 data={expensesByCategory}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
+                label={({ category }) => `${category}`}
+                labelLine={true}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="total"
@@ -301,7 +316,6 @@ export default function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Founder Payout</h3>
           <div className="text-center">
@@ -312,9 +326,6 @@ export default function Dashboard() {
             <div className="bg-gray-100 rounded-lg p-4">
               <p className="text-sm text-gray-600">
                 Net Revenue: {formatPrice(((revenueStats?.monthlyRevenue || 0) - (monthlyData?.[monthlyData.length - 1]?.expenses || 0)) / 100)}
-              </p>
-              <p className="text-sm text-gray-600">
-                Founder Share: 20%
               </p>
             </div>
           </div>
