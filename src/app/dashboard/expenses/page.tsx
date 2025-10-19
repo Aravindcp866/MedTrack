@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getExpenses, createExpense, deleteExpense, getExpensesByCategory } from '@/lib/api/expenses'
+import { getRevenueStats } from '@/lib/api/revenue'
 import { CreateExpenseData } from '@/lib/types'
 import { useCurrency } from '@/components/CurrencySettings'
-import { Plus, DollarSign, Tag, BarChart3 } from 'lucide-react'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
+import { Plus, IndianRupee , Tag, BarChart3 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function ExpensesPage() {
   const { formatPrice } = useCurrency()
+  const { toasts, success, error, removeToast } = useToast()
   const [showAddForm, setShowAddForm] = useState(false)
   const [newExpense, setNewExpense] = useState<CreateExpenseData>({
     description: '',
@@ -30,10 +33,24 @@ export default function ExpensesPage() {
     queryFn: () => getExpensesByCategory(),
   })
 
+  // Get current month date range for revenue
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const startDate = startOfMonth.toISOString().split('T')[0]
+  const endDate = endOfMonth.toISOString().split('T')[0]
+
+  const { data: revenueStats } = useQuery({
+    queryKey: ['revenue-stats', startDate, endDate],
+    queryFn: () => getRevenueStats(startDate, endDate),
+  })
+
   const createExpenseMutation = useMutation({
     mutationFn: createExpense,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Expense created successfully:', data)
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expenses-by-category'] })
       setShowAddForm(false)
       setNewExpense({
         description: '',
@@ -41,6 +58,11 @@ export default function ExpensesPage() {
         category: '',
         expense_date: new Date().toISOString().split('T')[0],
       })
+      success('Expense Added', 'The expense has been successfully added.')
+    },
+    onError: (err: Error) => {
+      console.error('Error creating expense:', err)
+      error('Failed to Add Expense', err.message || 'An error occurred while adding the expense.')
     },
   })
 
@@ -49,6 +71,11 @@ export default function ExpensesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['expenses-by-category'] })
+      success('Expense Deleted', 'The expense has been successfully deleted.')
+    },
+    onError: (err: Error) => {
+      console.error('Error deleting expense:', err)
+      error('Failed to Delete Expense', err.message || 'An error occurred while deleting the expense.')
     },
   })
 
@@ -60,6 +87,22 @@ export default function ExpensesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Submitting expense:', newExpense)
+    
+    // Validate required fields
+    if (!newExpense.description.trim()) {
+      error('Validation Error', 'Description is required.')
+      return
+    }
+    if (!newExpense.category) {
+      error('Validation Error', 'Category is required.')
+      return
+    }
+    if (newExpense.amount <= 0) {
+      error('Validation Error', 'Amount must be greater than 0.')
+      return
+    }
+    
     createExpenseMutation.mutate(newExpense)
   }
 
@@ -87,6 +130,7 @@ export default function ExpensesPage() {
 
   return (
     <div className="p-6">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Expense Management</h1>
         <button
@@ -96,6 +140,86 @@ export default function ExpensesPage() {
           <Plus className="w-4 h-4 mr-2" />
           Add Expense
         </button>
+      </div>
+
+      {/* Expense Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <IndianRupee  className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatPrice(expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <IndianRupee  className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">This Month</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatPrice(
+                  expenses?.filter(expense => {
+                    const expenseDate = new Date(expense.expense_date)
+                    const now = new Date()
+                    return expenseDate.getMonth() === now.getMonth() && 
+                           expenseDate.getFullYear() === now.getFullYear()
+                  }).reduce((sum, expense) => sum + expense.amount, 0) || 0
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <IndianRupee  className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Average per Month</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatPrice(
+                  expenses && expenses.length > 0 ? 
+                  expenses.reduce((sum, expense) => sum + expense.amount, 0) / Math.max(1, new Set(expenses.map(e => e.expense_date.split('-').slice(0, 2).join('-'))).size) : 0
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <IndianRupee  className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Net Profit</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatPrice(
+                    ((revenueStats?.monthlyRevenue || 0) / 100) - 
+                    (expenses?.filter(expense => {
+                      const expenseDate = new Date(expense.expense_date)
+                      const now = new Date()
+                      return expenseDate.getMonth() === now.getMonth() &&
+                            expenseDate.getFullYear() === now.getFullYear()
+                    }).reduce((sum, expense) => sum + expense.amount, 0) || 0)
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Revenue - Expenses = Net Profit
+                </p>
+              </div>
+            </div>
+          </div>
       </div>
 
       {/* Expenses Chart */}
@@ -110,8 +234,11 @@ export default function ExpensesPage() {
               <BarChart data={expensesByCategory}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip />
+                <YAxis tickFormatter={(value) => formatPrice(Number(value) / 100)} />
+                <Tooltip 
+                  formatter={(value) => [formatPrice(Number(value) / 100), 'Amount']}
+                  labelFormatter={(label) => `Category: ${label}`}
+                />
                 <Bar dataKey="total" fill="#4f46e5" />
               </BarChart>
             </ResponsiveContainer>
@@ -142,7 +269,7 @@ export default function ExpensesPage() {
                   step="0.01"
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-                  value={newExpense.amount}
+                  value={newExpense.amount || ''}
                   onChange={(e) => setNewExpense({ ...newExpense, amount: parseFloat(e.target.value) || 0 })}
                 />
               </div>
@@ -224,7 +351,7 @@ export default function ExpensesPage() {
                 <tr key={expense.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <DollarSign className="h-8 w-8 text-gray-400 mr-3" />
+                      <IndianRupee  className="h-8 w-8 text-gray-400 mr-3" />
                       <div>
                         <div className="text-sm font-medium text-gray-900">{expense.description}</div>
                       </div>

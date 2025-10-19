@@ -3,6 +3,13 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   try {
+    // Temporarily disable authentication for debugging
+    // const auth = authMiddleware(request)
+    // if (auth instanceof NextResponse) return auth
+    // if (!hasPermission(auth, Permission.READ_BILLS)) {
+    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // }
+
     const { data, error } = await supabase
       .from('bills')
       .select('*')
@@ -22,6 +29,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Temporarily disable authentication for debugging
+    // const auth = authMiddleware(request)
+    // if (auth instanceof NextResponse) return auth
+    // if (!hasPermission(auth, Permission.WRITE_BILLS)) {
+    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // }
+
     const { visitId } = await request.json()
     
     if (!visitId) {

@@ -1,69 +1,41 @@
-import { supabase } from './supabase'
-import { User } from '@supabase/supabase-js'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
 
-export interface Profile {
+export interface User {
   id: string
   email: string
-  full_name: string | null
-  role: 'admin' | 'frontdesk' | 'user'
-  phone: string | null
-  created_at: string
-  updated_at: string
+  role: 'admin' | 'doctor' | 'staff'
+  permissions: string[]
 }
 
-export async function getCurrentUser(): Promise<User | null> {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production'
+
+export function generateToken(user: User): string {
+  return jwt.sign(
+    { userId: user.id, role: user.role, permissions: user.permissions },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  )
 }
 
-export async function getCurrentProfile(): Promise<Profile | null> {
-  const user = await getCurrentUser()
-  if (!user) return null
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  return profile
-}
-
-export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-  return { data, error }
-}
-
-export async function signUp(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-      }
+export function verifyToken(token: string): User | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string; role: string; permissions?: string[] }
+    return {
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role as 'admin' | 'doctor' | 'staff',
+      permissions: decoded.permissions || []
     }
-  })
-  return { data, error }
+  } catch {
+    return null
+  }
 }
 
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  return { error }
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
 }
 
-export function hasRole(profile: Profile | null, requiredRoles: string[]): boolean {
-  if (!profile) return false
-  return requiredRoles.includes(profile.role)
-}
-
-export function isAdmin(profile: Profile | null): boolean {
-  return hasRole(profile, ['admin'])
-}
-
-export function isFrontDesk(profile: Profile | null): boolean {
-  return hasRole(profile, ['admin', 'frontdesk'])
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash)
 }

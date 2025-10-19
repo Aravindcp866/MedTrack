@@ -2,13 +2,18 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getPatients, createPatient, deletePatient } from '@/lib/api/patients'
+import { api } from '@/lib/api-client'
 import { CreatePatientData } from '@/lib/types'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 import { Plus, Users, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
 
 export default function PatientsPage() {
+  const { toasts, success, error, removeToast } = useToast()
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null)
   const [newPatient, setNewPatient] = useState<CreatePatientData>({
     first_name: '',
     last_name: '',
@@ -17,7 +22,8 @@ export default function PatientsPage() {
     date_of_birth: '',
     gender: '',
     address: '',
-    emergency_contact: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
     medical_history: '',
     allergies: '',
   })
@@ -26,12 +32,12 @@ export default function PatientsPage() {
 
   const { data: patients, isLoading } = useQuery({
     queryKey: ['patients'],
-    queryFn: getPatients,
+    queryFn: api.getPatients,
   })
 
   const createPatientMutation = useMutation({
-    mutationFn: createPatient,
-    onSuccess: () => {
+    mutationFn: api.createPatient,
+    onSuccess: (newPatient) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       setShowAddForm(false)
       setNewPatient({
@@ -42,23 +48,41 @@ export default function PatientsPage() {
         date_of_birth: '',
         gender: '',
         address: '',
-        emergency_contact: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
         medical_history: '',
         allergies: '',
       })
+      success('Patient added', `${newPatient.first_name} ${newPatient.last_name} has been added successfully`)
+    },
+    onError: (err) => {
+      console.error('Patient creation error:', err)
+      error('Failed to add patient', err.message)
     },
   })
 
   const deletePatientMutation = useMutation({
-    mutationFn: deletePatient,
+    mutationFn: api.deletePatient,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
+      success('Patient deleted', 'Patient has been removed successfully')
+    },
+    onError: (err) => {
+      console.error('Patient deletion error:', err)
+      error('Failed to delete patient', err.message)
     },
   })
 
-  const handleDelete = (patientId: string) => {
-    if (confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-      deletePatientMutation.mutate(patientId)
+  const handleDelete = (patientId: string, patientName: string) => {
+    setDeleteTarget({ id: patientId, name: patientName })
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deletePatientMutation.mutate(deleteTarget.id)
+      setShowDeleteConfirm(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -102,8 +126,8 @@ export default function PatientsPage() {
 
       {/* Add Patient Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
             <h2 className="text-xl font-bold mb-4">Add New Patient</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -181,12 +205,21 @@ export default function PatientsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Emergency Contact</label>
+                <label className="block text-sm font-medium text-gray-700">Emergency Contact Name</label>
                 <input
                   type="text"
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-                  value={newPatient.emergency_contact}
-                  onChange={(e) => setNewPatient({ ...newPatient, emergency_contact: e.target.value })}
+                  value={newPatient.emergency_contact_name}
+                  onChange={(e) => setNewPatient({ ...newPatient, emergency_contact_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Emergency Contact Phone</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  value={newPatient.emergency_contact_phone}
+                  onChange={(e) => setNewPatient({ ...newPatient, emergency_contact_phone: e.target.value })}
                 />
               </div>
               <div>
@@ -298,7 +331,7 @@ export default function PatientsPage() {
                       View
                     </Link>
                     <button
-                      onClick={() => handleDelete(patient.id)}
+                      onClick={() => handleDelete(patient.id, `${patient.first_name} ${patient.last_name}`)}
                       className="text-red-600 hover:text-red-900 cursor-pointer"
                     >
                       Delete
@@ -310,6 +343,22 @@ export default function PatientsPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Delete Patient"
+        message={`Are you sure you want to delete ${deleteTarget?.name}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={deletePatientMutation.isPending}
+      />
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   )
 }

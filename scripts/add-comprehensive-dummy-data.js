@@ -1,8 +1,8 @@
 const { createClient } = require('@supabase/supabase-js')
-require('dotenv').config({ path: '.env.local' })
 
+// Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables')
@@ -11,11 +11,21 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Helper function to generate random dates
+function randomDate(start, end) {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+}
+
+// Helper function to generate random amount in cents
+function randomAmount(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min) * 100
+}
+
 async function addDummyData() {
   console.log('🚀 Adding comprehensive dummy data...')
 
   try {
-    // 1. Add more patients
+    // 1. Add more patients with detailed information
     console.log('📝 Adding patients...')
     const patients = [
       {
@@ -24,12 +34,12 @@ async function addDummyData() {
         email: 'john.smith@email.com',
         phone: '+1-555-0101',
         date_of_birth: '1985-03-15',
-        gender: 'Male',
+        gender: 'male',
         address: '123 Main St, New York, NY 10001',
-        medical_history: 'Hypertension, Diabetes Type 2',
-        allergies: 'Penicillin, Shellfish',
         emergency_contact_name: 'Jane Smith',
-        emergency_contact_phone: '+1-555-0102'
+        emergency_contact_phone: '+1-555-0102',
+        medical_history: 'Hypertension, Diabetes Type 2',
+        allergies: 'Penicillin, Shellfish'
       },
       {
         first_name: 'Sarah',
@@ -37,12 +47,12 @@ async function addDummyData() {
         email: 'sarah.johnson@email.com',
         phone: '+1-555-0201',
         date_of_birth: '1990-07-22',
-        gender: 'Female',
+        gender: 'female',
         address: '456 Oak Ave, Los Angeles, CA 90210',
-        medical_history: 'Asthma, Seasonal allergies',
-        allergies: 'Dust mites, Pollen',
         emergency_contact_name: 'Mike Johnson',
-        emergency_contact_phone: '+1-555-0202'
+        emergency_contact_phone: '+1-555-0202',
+        medical_history: 'Asthma, Seasonal allergies',
+        allergies: 'Pollen, Dust mites'
       },
       {
         first_name: 'Michael',
@@ -50,12 +60,12 @@ async function addDummyData() {
         email: 'michael.brown@email.com',
         phone: '+1-555-0301',
         date_of_birth: '1978-11-08',
-        gender: 'Male',
+        gender: 'male',
         address: '789 Pine St, Chicago, IL 60601',
-        medical_history: 'High cholesterol, Back pain',
-        allergies: 'None known',
         emergency_contact_name: 'Lisa Brown',
-        emergency_contact_phone: '+1-555-0302'
+        emergency_contact_phone: '+1-555-0302',
+        medical_history: 'High cholesterol, Sleep apnea',
+        allergies: 'None known'
       },
       {
         first_name: 'Emily',
@@ -63,12 +73,12 @@ async function addDummyData() {
         email: 'emily.davis@email.com',
         phone: '+1-555-0401',
         date_of_birth: '1992-05-14',
-        gender: 'Female',
+        gender: 'female',
         address: '321 Elm St, Houston, TX 77001',
-        medical_history: 'Migraine, Anxiety',
-        allergies: 'Latex',
         emergency_contact_name: 'David Davis',
-        emergency_contact_phone: '+1-555-0402'
+        emergency_contact_phone: '+1-555-0402',
+        medical_history: 'Migraine, Anxiety',
+        allergies: 'Latex, Ibuprofen'
       },
       {
         first_name: 'Robert',
@@ -76,353 +86,227 @@ async function addDummyData() {
         email: 'robert.wilson@email.com',
         phone: '+1-555-0501',
         date_of_birth: '1983-09-30',
-        gender: 'Male',
+        gender: 'male',
         address: '654 Maple Dr, Phoenix, AZ 85001',
-        medical_history: 'Heart condition, Sleep apnea',
-        allergies: 'Aspirin',
         emergency_contact_name: 'Mary Wilson',
-        emergency_contact_phone: '+1-555-0502'
+        emergency_contact_phone: '+1-555-0502',
+        medical_history: 'Arthritis, GERD',
+        allergies: 'Sulfa drugs'
       }
     ]
 
-    const { data: patientsData, error: patientsError } = await supabase
+    const { data: insertedPatients, error: patientsError } = await supabase
       .from('patients')
       .insert(patients)
       .select()
 
-    if (patientsError) {
-      console.log('Patients already exist or error:', patientsError.message)
-    } else {
-      console.log(`✅ Added ${patientsData.length} patients`)
-    }
+    if (patientsError) throw patientsError
+    console.log(`✅ Added ${insertedPatients.length} patients`)
 
-    // 2. Add more products with quantities
-    console.log('📦 Adding products with quantities...')
+    // 2. Add more products with realistic quantities
+    console.log('📦 Adding products...')
     const products = [
       {
-        name: 'Paracetamol 500mg',
-        description: 'Pain relief tablets',
-        sku: 'MED-001',
-        category: 'Medication',
-        unit_price_cents: 500, // $5.00
-        current_stock: 150,
-        min_stock_level: 20
+        name: 'Blood Pressure Monitor',
+        description: 'Digital blood pressure monitor with large display',
+        category: 'Medical Equipment',
+        unit_price: 89.99,
+        stock_quantity: 15,
+        min_stock_level: 5,
+        unit: 'piece'
       },
       {
-        name: 'Ibuprofen 400mg',
-        description: 'Anti-inflammatory tablets',
-        sku: 'MED-002',
-        category: 'Medication',
-        unit_price_cents: 750, // $7.50
-        current_stock: 200,
-        min_stock_level: 30
-      },
-      {
-        name: 'Bandages (Pack of 50)',
-        description: 'Sterile adhesive bandages',
-        sku: 'SUP-001',
-        category: 'Supplies',
-        unit_price_cents: 1200, // $12.00
-        current_stock: 75,
-        min_stock_level: 15
+        name: 'Glucose Test Strips',
+        description: 'Box of 50 glucose test strips',
+        category: 'Diagnostic Supplies',
+        unit_price: 24.99,
+        stock_quantity: 200,
+        min_stock_level: 50,
+        unit: 'box'
       },
       {
         name: 'Surgical Gloves (Box of 100)',
-        description: 'Latex-free surgical gloves',
-        sku: 'SUP-002',
-        category: 'Supplies',
-        unit_price_cents: 2500, // $25.00
-        current_stock: 40,
-        min_stock_level: 10
+        description: 'Latex-free surgical gloves, powder-free',
+        category: 'Personal Protective Equipment',
+        unit_price: 12.99,
+        stock_quantity: 50,
+        min_stock_level: 10,
+        unit: 'box'
       },
       {
         name: 'Thermometer Digital',
-        description: 'Digital medical thermometer',
-        sku: 'EQU-001',
-        category: 'Equipment',
-        unit_price_cents: 3500, // $35.00
-        current_stock: 25,
-        min_stock_level: 5
+        description: 'Digital oral/rectal thermometer',
+        category: 'Medical Equipment',
+        unit_price: 15.99,
+        stock_quantity: 25,
+        min_stock_level: 8,
+        unit: 'piece'
       },
       {
-        name: 'Blood Pressure Monitor',
-        description: 'Digital blood pressure monitor',
-        sku: 'EQU-002',
-        category: 'Equipment',
-        unit_price_cents: 15000, // $150.00
-        current_stock: 8,
-        min_stock_level: 3
-      },
-      {
-        name: 'Syringes 5ml (Pack of 100)',
-        description: 'Sterile disposable syringes',
-        sku: 'SUP-003',
-        category: 'Supplies',
-        unit_price_cents: 800, // $8.00
-        current_stock: 120,
-        min_stock_level: 25
-      },
-      {
-        name: 'Antiseptic Solution',
-        description: 'Chlorhexidine antiseptic solution',
-        sku: 'MED-003',
-        category: 'Medication',
-        unit_price_cents: 1800, // $18.00
-        current_stock: 60,
-        min_stock_level: 12
+        name: 'Bandages (Assorted)',
+        description: 'Box of assorted adhesive bandages',
+        category: 'First Aid',
+        unit_price: 8.99,
+        stock_quantity: 100,
+        min_stock_level: 20,
+        unit: 'box'
       }
     ]
 
-    const { data: productsData, error: productsError } = await supabase
+    const { data: insertedProducts, error: productsError } = await supabase
       .from('products')
       .insert(products)
       .select()
 
-    if (productsError) {
-      console.log('Products already exist or error:', productsError.message)
-    } else {
-      console.log(`✅ Added ${productsData.length} products`)
+    if (productsError) throw productsError
+    console.log(`✅ Added ${insertedProducts.length} products`)
+
+    // 3. Add comprehensive expenses data
+    console.log('💰 Adding expenses...')
+    const expenseCategories = ['Rent', 'Utilities', 'Medical Supplies', 'Equipment', 'Staff Salaries', 'Insurance', 'Marketing', 'Maintenance']
+    const expenses = []
+
+    // Generate expenses for the last 6 months
+    for (let month = 0; month < 6; month++) {
+      const date = new Date()
+      date.setMonth(date.getMonth() - month)
+      
+      // Add 3-5 expenses per month
+      const numExpenses = Math.floor(Math.random() * 3) + 3
+      
+      for (let i = 0; i < numExpenses; i++) {
+        const category = expenseCategories[Math.floor(Math.random() * expenseCategories.length)]
+        const amount = randomAmount(50, 2000) // $50 to $2000
+        
+        expenses.push({
+          description: `${category} expense for ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+          amount: amount,
+          category: category,
+          expense_date: randomDate(
+            new Date(date.getFullYear(), date.getMonth(), 1),
+            new Date(date.getFullYear(), date.getMonth() + 1, 0)
+          ).toISOString().split('T')[0]
+        })
+      }
     }
 
-    // 3. Add more expenses with different categories
-    console.log('💰 Adding expenses...')
-    const expenses = [
-      {
-        description: 'Office rent for January',
-        amount: 250000, // $2,500.00
-        category: 'rent',
-        expense_date: '2024-01-01'
-      },
-      {
-        description: 'Electricity bill',
-        amount: 35000, // $350.00
-        category: 'utilities',
-        expense_date: '2024-01-15'
-      },
-      {
-        description: 'Nurse salary',
-        amount: 450000, // $4,500.00
-        category: 'staff',
-        expense_date: '2024-01-31'
-      },
-      {
-        description: 'New medical equipment',
-        amount: 150000, // $1,500.00
-        category: 'equipment',
-        expense_date: '2024-02-05'
-      },
-      {
-        description: 'Medical supplies restock',
-        amount: 85000, // $850.00
-        category: 'supplies',
-        expense_date: '2024-02-10'
-      },
-      {
-        description: 'Insurance premium',
-        amount: 120000, // $1,200.00
-        category: 'insurance',
-        expense_date: '2024-02-15'
-      },
-      {
-        description: 'Online advertising',
-        amount: 25000, // $250.00
-        category: 'marketing',
-        expense_date: '2024-02-20'
-      },
-      {
-        description: 'Equipment maintenance',
-        amount: 40000, // $400.00
-        category: 'maintenance',
-        expense_date: '2024-02-25'
-      }
-    ]
-
-    const { data: expensesData, error: expensesError } = await supabase
+    const { data: insertedExpenses, error: expensesError } = await supabase
       .from('expenses')
       .insert(expenses)
       .select()
 
-    if (expensesError) {
-      console.log('Expenses already exist or error:', expensesError.message)
-    } else {
-      console.log(`✅ Added ${expensesData.length} expenses`)
+    if (expensesError) throw expensesError
+    console.log(`✅ Added ${insertedExpenses.length} expenses`)
+
+    // 4. Add comprehensive revenue entries
+    console.log('📈 Adding revenue entries...')
+    const revenueEntries = []
+
+    // Generate revenue for the last 6 months
+    for (let month = 0; month < 6; month++) {
+      const date = new Date()
+      date.setMonth(date.getMonth() - month)
+      
+      // Add 10-20 revenue entries per month
+      const numEntries = Math.floor(Math.random() * 11) + 10
+      
+      for (let i = 0; i < numEntries; i++) {
+        const amount = randomAmount(100, 5000) // $100 to $5000
+        const source = ['Consultation', 'Treatment', 'Procedure', 'Medication', 'Lab Test'][Math.floor(Math.random() * 5)]
+        
+        revenueEntries.push({
+          amount: amount,
+          source: source,
+          description: `${source} revenue - ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+          revenue_date: randomDate(
+            new Date(date.getFullYear(), date.getMonth(), 1),
+            new Date(date.getFullYear(), date.getMonth() + 1, 0)
+          ).toISOString().split('T')[0]
+        })
+      }
     }
 
-    // 4. Add revenue entries
-    console.log('💵 Adding revenue entries...')
-    const revenueEntries = [
-      {
-        description: 'Consultation fees',
-        amount: 50000, // $500.00
-        revenue_date: '2024-01-15'
-      },
-      {
-        description: 'Lab tests',
-        amount: 25000, // $250.00
-        revenue_date: '2024-01-20'
-      },
-      {
-        description: 'Medication sales',
-        amount: 15000, // $150.00
-        revenue_date: '2024-01-25'
-      },
-      {
-        description: 'Consultation fees',
-        amount: 75000, // $750.00
-        revenue_date: '2024-02-01'
-      },
-      {
-        description: 'Emergency services',
-        amount: 100000, // $1,000.00
-        revenue_date: '2024-02-05'
-      },
-      {
-        description: 'Follow-up consultations',
-        amount: 30000, // $300.00
-        revenue_date: '2024-02-10'
-      },
-      {
-        description: 'Lab tests',
-        amount: 40000, // $400.00
-        revenue_date: '2024-02-15'
-      },
-      {
-        description: 'Medication sales',
-        amount: 20000, // $200.00
-        revenue_date: '2024-02-20'
-      }
-    ]
-
-    const { data: revenueData, error: revenueError } = await supabase
+    const { data: insertedRevenue, error: revenueError } = await supabase
       .from('revenue_entries')
       .insert(revenueEntries)
       .select()
 
-    if (revenueError) {
-      console.log('Revenue entries already exist or error:', revenueError.message)
-    } else {
-      console.log(`✅ Added ${revenueData.length} revenue entries`)
+    if (revenueError) throw revenueError
+    console.log(`✅ Added ${insertedRevenue.length} revenue entries`)
+
+    // 5. Add visits for patients
+    console.log('🏥 Adding visits...')
+    const visits = []
+    
+    for (const patient of insertedPatients) {
+      // Add 2-5 visits per patient
+      const numVisits = Math.floor(Math.random() * 4) + 2
+      
+      for (let i = 0; i < numVisits; i++) {
+        const visitDate = randomDate(
+          new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+          new Date()
+        )
+        
+        visits.push({
+          patient_id: patient.id,
+          visit_type: ['Consultation', 'Follow-up', 'Emergency', 'Routine Check-up'][Math.floor(Math.random() * 4)],
+          status: ['completed', 'scheduled', 'cancelled'][Math.floor(Math.random() * 3)],
+          treatment_notes: `Visit notes for ${patient.first_name} ${patient.last_name}`,
+          visit_date: visitDate.toISOString().split('T')[0]
+        })
+      }
     }
 
-    // 5. Add visits
-    console.log('🏥 Adding visits...')
-    const visits = [
-      {
-        patient_id: patientsData?.[0]?.id || 'existing-patient-id',
-        visit_type: 'Consultation',
-        status: 'completed',
-        notes: 'Regular checkup, patient in good health',
-        visit_date: '2024-01-15'
-      },
-      {
-        patient_id: patientsData?.[1]?.id || 'existing-patient-id',
-        visit_type: 'Follow-up',
-        status: 'completed',
-        notes: 'Follow-up for asthma treatment',
-        visit_date: '2024-01-20'
-      },
-      {
-        patient_id: patientsData?.[2]?.id || 'existing-patient-id',
-        visit_type: 'Emergency',
-        status: 'completed',
-        notes: 'Emergency visit for back pain',
-        visit_date: '2024-02-01'
-      },
-      {
-        patient_id: patientsData?.[3]?.id || 'existing-patient-id',
-        visit_type: 'Consultation',
-        status: 'completed',
-        notes: 'Migraine consultation and treatment',
-        visit_date: '2024-02-05'
-      },
-      {
-        patient_id: patientsData?.[4]?.id || 'existing-patient-id',
-        visit_type: 'Checkup',
-        status: 'completed',
-        notes: 'Cardiac checkup and monitoring',
-        visit_date: '2024-02-10'
-      }
-    ]
-
-    const { data: visitsData, error: visitsError } = await supabase
+    const { data: insertedVisits, error: visitsError } = await supabase
       .from('visits')
       .insert(visits)
       .select()
 
-    if (visitsError) {
-      console.log('Visits already exist or error:', visitsError.message)
-    } else {
-      console.log(`✅ Added ${visitsData.length} visits`)
+    if (visitsError) throw visitsError
+    console.log(`✅ Added ${insertedVisits.length} visits`)
+
+    // 6. Add bills for completed visits
+    console.log('🧾 Adding bills...')
+    const bills = []
+    
+    for (const visit of insertedVisits.filter(v => v.status === 'completed')) {
+      const subtotal = randomAmount(100, 2000)
+      const tax = Math.round(subtotal * 0.1) // 10% tax
+      const total = subtotal + tax
+      
+      bills.push({
+        visit_id: visit.id,
+        bill_number: `BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        subtotal: subtotal / 100,
+        tax_amount: tax / 100,
+        total_amount: total / 100,
+        status: ['paid', 'pending', 'overdue'][Math.floor(Math.random() * 3)]
+      })
     }
 
-    // 6. Add bills
-    console.log('🧾 Adding bills...')
-    const bills = [
-      {
-        patient_id: patientsData?.[0]?.id || 'existing-patient-id',
-        bill_number: 'INV-001',
-        total_cents: 50000, // $500.00
-        payment_status: 'paid',
-        payment_method: 'cash',
-        due_date: '2024-01-30'
-      },
-      {
-        patient_id: patientsData?.[1]?.id || 'existing-patient-id',
-        bill_number: 'INV-002',
-        total_cents: 25000, // $250.00
-        payment_status: 'pending',
-        payment_method: null,
-        due_date: '2024-02-15'
-      },
-      {
-        patient_id: patientsData?.[2]?.id || 'existing-patient-id',
-        bill_number: 'INV-003',
-        total_cents: 75000, // $750.00
-        payment_status: 'paid',
-        payment_method: 'card',
-        due_date: '2024-02-10'
-      },
-      {
-        patient_id: patientsData?.[3]?.id || 'existing-patient-id',
-        bill_number: 'INV-004',
-        total_cents: 30000, // $300.00
-        payment_status: 'overdue',
-        payment_method: null,
-        due_date: '2024-01-25'
-      },
-      {
-        patient_id: patientsData?.[4]?.id || 'existing-patient-id',
-        bill_number: 'INV-005',
-        total_cents: 100000, // $1,000.00
-        payment_status: 'paid',
-        payment_method: 'insurance',
-        due_date: '2024-02-20'
-      }
-    ]
-
-    const { data: billsData, error: billsError } = await supabase
+    const { data: insertedBills, error: billsError } = await supabase
       .from('bills')
       .insert(bills)
       .select()
 
-    if (billsError) {
-      console.log('Bills already exist or error:', billsError.message)
-    } else {
-      console.log(`✅ Added ${billsData.length} bills`)
-    }
+    if (billsError) throw billsError
+    console.log(`✅ Added ${insertedBills.length} bills`)
 
     console.log('🎉 All dummy data added successfully!')
     console.log('\n📊 Summary:')
-    console.log(`- Patients: ${patients.length}`)
-    console.log(`- Products: ${products.length} (with quantities)`)
-    console.log(`- Expenses: ${expenses.length} (across different categories)`)
-    console.log(`- Revenue Entries: ${revenueEntries.length}`)
-    console.log(`- Visits: ${visits.length}`)
-    console.log(`- Bills: ${bills.length}`)
+    console.log(`- Patients: ${insertedPatients.length}`)
+    console.log(`- Products: ${insertedProducts.length}`)
+    console.log(`- Expenses: ${insertedExpenses.length}`)
+    console.log(`- Revenue Entries: ${insertedRevenue.length}`)
+    console.log(`- Visits: ${insertedVisits.length}`)
+    console.log(`- Bills: ${insertedBills.length}`)
 
   } catch (error) {
     console.error('❌ Error adding dummy data:', error)
+    process.exit(1)
   }
 }
 
+// Run the script
 addDummyData()

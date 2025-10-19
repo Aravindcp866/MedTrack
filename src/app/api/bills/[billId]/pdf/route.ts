@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import puppeteer from 'puppeteer'
 
-export async function POST(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ billId: string }> }
 ) {
@@ -41,60 +40,12 @@ export async function POST(
     // Generate HTML for PDF
     const html = generateInvoiceHTML(bill, patient, visit, items)
 
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
-    
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        right: '20px',
-        bottom: '20px',
-        left: '20px'
-      }
-    })
-    
-    await browser.close()
-
-    // Upload PDF to Supabase Storage
-    if (!supabaseAdmin) {
-      throw new Error('Supabase admin client not available. Please check your environment variables.')
-    }
-    
-    const fileName = `invoice-${bill.bill_number}.pdf`
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('invoices')
-      .upload(fileName, pdfBuffer, {
-        contentType: 'application/pdf',
-        upsert: true
-      })
-
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`)
-    }
-
-    // Get public URL
-    const { data: urlData } = supabaseAdmin.storage
-      .from('invoices')
-      .getPublicUrl(fileName)
-
-    // Update bill with PDF URL
-    await supabaseAdmin
-      .from('bills')
-      .update({ pdf_url: urlData.publicUrl })
-      .eq('id', billId)
-
-    return NextResponse.json({ 
-      success: true, 
-      pdfUrl: urlData.publicUrl,
-      fileName 
+    // Return HTML that can be printed as PDF
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache',
+      },
     })
 
   } catch (error) {

@@ -8,6 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP TABLE IF EXISTS public.bill_items CASCADE;
 DROP TABLE IF EXISTS public.bills CASCADE;
 DROP TABLE IF EXISTS public.visit_treatments CASCADE;
+DROP TABLE IF EXISTS public.treatments CASCADE;
 DROP TABLE IF EXISTS public.visits CASCADE;
 DROP TABLE IF EXISTS public.patients CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
@@ -33,6 +34,7 @@ CREATE TABLE public.products (
     description TEXT,
     category TEXT,
     unit_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+    unit_price_cents INTEGER DEFAULT 0,
     stock_quantity INTEGER NOT NULL DEFAULT 0,
     min_stock_level INTEGER DEFAULT 0,
     unit TEXT DEFAULT 'piece',
@@ -67,8 +69,23 @@ CREATE TABLE public.visits (
     chief_complaint TEXT,
     diagnosis TEXT,
     treatment_notes TEXT,
+    notes TEXT,
     follow_up_date DATE,
     status TEXT DEFAULT 'completed',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create treatments table
+CREATE TABLE public.treatments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    price_cents INTEGER NOT NULL DEFAULT 0,
+    price DECIMAL(10,2) DEFAULT 0,
+    duration_minutes INTEGER,
+    category TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -77,9 +94,10 @@ CREATE TABLE public.visits (
 CREATE TABLE public.visit_treatments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     visit_id UUID REFERENCES public.visits(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES public.products(id),
+    treatment_id UUID REFERENCES public.treatments(id),
     quantity INTEGER NOT NULL DEFAULT 1,
-    unit_price DECIMAL(10,2) NOT NULL,
+    unit_price_cents INTEGER NOT NULL,
+    total_cents INTEGER NOT NULL,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -96,6 +114,9 @@ CREATE TABLE public.bills (
     tax_amount DECIMAL(10,2) DEFAULT 0,
     discount_amount DECIMAL(10,2) DEFAULT 0,
     total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    subtotal_cents INTEGER DEFAULT 0,
+    tax_cents INTEGER DEFAULT 0,
+    total_cents INTEGER DEFAULT 0,
     paid_amount DECIMAL(10,2) DEFAULT 0,
     status TEXT DEFAULT 'pending',
     payment_method TEXT,
@@ -122,6 +143,7 @@ CREATE TABLE public.expenses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     description TEXT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
+    amount_cents INTEGER DEFAULT 0,
     category TEXT,
     expense_date DATE NOT NULL,
     receipt_url TEXT,
@@ -135,6 +157,7 @@ CREATE TABLE public.revenue_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     description TEXT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
+    amount_cents INTEGER DEFAULT 0,
     category TEXT,
     revenue_date DATE NOT NULL,
     source TEXT,
@@ -181,6 +204,10 @@ CREATE TRIGGER update_products_updated_at
 
 CREATE TRIGGER update_patients_updated_at
     BEFORE UPDATE ON public.patients
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_treatments_updated_at
+    BEFORE UPDATE ON public.treatments
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER update_visits_updated_at
@@ -253,9 +280,24 @@ ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.patients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.visits DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.treatments DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.visit_treatments DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bills DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bill_items DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.revenue_entries DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications DISABLE ROW LEVEL SECURITY;
+
+-- Function to update product stock
+CREATE OR REPLACE FUNCTION public.update_product_stock(
+    product_id UUID,
+    quantity_change INTEGER
+)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE public.products 
+    SET stock_quantity = stock_quantity + quantity_change,
+        updated_at = NOW()
+    WHERE id = product_id;
+END;
+$$ LANGUAGE plpgsql;

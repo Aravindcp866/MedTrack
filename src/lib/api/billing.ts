@@ -147,6 +147,73 @@ export async function sendBillNotification(billId: string): Promise<void> {
   }
 }
 
+export async function recalculateBillTotal(billId: string): Promise<Bill> {
+  // First, try to refresh the schema cache by making a simple query
+  try {
+    await supabase.from('bills').select('id').limit(1)
+  } catch {
+    console.log('Schema cache refresh failed, continuing with update...')
+  }
+  // Get all bill items for this bill
+  const { data: billItems, error: itemsError } = await supabase
+    .from('bill_items')
+    .select('total_price')
+    .eq('bill_id', billId)
+
+  if (itemsError) throw itemsError
+
+  // Calculate new totals
+  const subtotalDollars = billItems?.reduce((sum, item) => sum + (item.total_price || 0), 0) || 0
+  const taxDollars = subtotalDollars * 0.1 // 10% tax
+  const totalDollars = subtotalDollars + taxDollars
+
+  // Convert to cents for cents columns
+  const subtotalCents = Math.round(subtotalDollars * 100)
+  const taxCents = Math.round(taxDollars * 100)
+  const totalCents = Math.round(totalDollars * 100)
+
+  // Try to update both decimal and cents columns
+  const updateData = {
+    // Decimal columns
+    subtotal: subtotalDollars,
+    tax_amount: taxDollars,
+    total_amount: totalDollars,
+    // Cents columns (if they exist)
+    subtotal_cents: subtotalCents,
+    tax_cents: taxCents,
+    total_cents: totalCents,
+    updated_at: new Date().toISOString()
+  }
+
+  const { data, error } = await supabase
+    .from('bills')
+    .update(updateData)
+    .eq('id', billId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating bill totals:', error)
+    // If cents columns don't exist, try with only decimal columns
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('bills')
+      .update({
+        subtotal: subtotalDollars,
+        tax_amount: taxDollars,
+        total_amount: totalDollars,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', billId)
+      .select()
+      .single()
+
+    if (fallbackError) throw fallbackError
+    return fallbackData
+  }
+
+  return data
+}
+
 export async function getBillWithDetails(billId: string): Promise<{
   bill: Bill
   patient: Patient

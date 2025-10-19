@@ -2,9 +2,10 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getPatient, updatePatient, deletePatient } from '@/lib/api/patients'
+import { api } from '@/lib/api-client'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ArrowLeft, Edit, Trash2, Save, X, Phone, Mail, MapPin, User, Heart, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Save, X, Phone, Mail, MapPin, User, Heart, AlertTriangle, Calendar, Stethoscope } from 'lucide-react'
 
 export default function PatientDetailPage() {
   const params = useParams()
@@ -44,6 +45,16 @@ export default function PatientDetailPage() {
     queryKey: ['patient', patientId],
     queryFn: () => getPatient(patientId),
   })
+
+  const { data: visits, isLoading: visitsLoading } = useQuery({
+    queryKey: ['visits', patientId],
+    queryFn: () => api.getVisits(),
+    enabled: !!patient,
+  })
+
+  // Get patient visits and last visit
+  const patientVisits = visits?.filter(visit => visit.patient_id === patientId) || []
+  const lastVisit = patientVisits.length > 0 ? patientVisits[0] : null
 
   const updatePatientMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<{
@@ -85,7 +96,7 @@ export default function PatientDetailPage() {
         address: patient.address || '',
         medical_history: patient.medical_history || '',
         allergies: patient.allergies || '',
-        emergency_contact_name: patient.emergency_contact || '',
+        emergency_contact_name: patient.emergency_contact_name || '',
         emergency_contact_phone: '',
       })
       setIsEditing(true)
@@ -386,7 +397,7 @@ export default function PatientDetailPage() {
                     onChange={(e) => setEditedPatient({ ...editedPatient, emergency_contact_name: e.target.value })}
                   />
                 ) : (
-                  <p className="mt-1 text-sm text-gray-900">{patient.emergency_contact || '-'}</p>
+                  <p className="mt-1 text-sm text-gray-900">{patient.emergency_contact_name || '-'}</p>
                 )}
               </div>
               <div>
@@ -404,6 +415,86 @@ export default function PatientDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Visit Information */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Stethoscope className="w-5 h-5 mr-2" />
+            Visit Information
+          </h2>
+
+          {visitsLoading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-16 bg-gray-200 rounded"></div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Last Visit Summary */}
+              {lastVisit ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-medium text-blue-900 mb-2 flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Last Visit
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-700 font-medium">Date:</span>
+                      <p className="text-blue-900">{new Date(lastVisit.visit_date).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-blue-700 font-medium">Type:</span>
+                      <p className="text-blue-900 capitalize">{lastVisit.visit_type.replace('_', ' ')}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-blue-700 font-medium">Treatment Notes:</span>
+                      <p className="text-blue-900 mt-1">{lastVisit.treatment_notes || 'No notes recorded'}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Stethoscope className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No visits recorded yet</p>
+                </div>
+              )}
+
+              {/* Visit History */}
+              {patientVisits.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">Recent Visits</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {patientVisits.slice(0, 5).map((visit) => (
+                      <div key={visit.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+                            <span className="font-medium text-gray-900">
+                              {new Date(visit.visit_date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            visit.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            visit.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {visit.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2 capitalize">
+                          {visit.visit_type.replace('_', ' ')}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          {visit.treatment_notes || 'No treatment notes'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

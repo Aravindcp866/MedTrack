@@ -6,7 +6,7 @@ export interface Product {
   description: string | null
   sku: string | null
   category: string | null
-  unit_price_cents: number
+  unit_price: number
   stock_quantity: number
   min_stock_level: number
   is_active: boolean
@@ -34,7 +34,8 @@ export interface Patient {
   date_of_birth: string | null
   gender: string | null
   address: string | null
-  emergency_contact: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   medical_history: string | null
   allergies: string | null
   created_at: string
@@ -96,8 +97,8 @@ export interface BillItem {
   bill_id: string
   treatment_name: string
   quantity: number
-  unit_price_cents: number
-  total_cents: number
+  unit_price: number
+  total_price: number
   created_at: string
 }
 
@@ -158,7 +159,8 @@ export interface CreatePatientData {
   date_of_birth?: string
   gender?: string
   address?: string
-  emergency_contact?: string
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
   medical_history?: string
   allergies?: string
 }

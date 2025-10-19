@@ -38,8 +38,25 @@ export function useCurrency() {
     }
   }
 
-  const formatPrice = (amount: number) => {
-    return `${currency.symbol}${amount.toFixed(2)}`
+  const formatPrice = (amount: number | string | undefined | null) => {
+    // Handle undefined, null, or invalid amounts
+    if (amount === undefined || amount === null || amount === '') {
+      return `${currency.symbol}0.00`
+    }
+    
+    // Handle both regular amounts and amounts in cents
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    
+    // Check if the parsed amount is valid
+    if (isNaN(numAmount) || !isFinite(numAmount)) {
+      return `${currency.symbol}0.00`
+    }
+    
+    // Check if the amount is likely in cents (very large numbers)
+    // Most prices in the app are stored in cents, so we need to convert
+    const displayAmount = numAmount >= 100 ? numAmount / 100 : numAmount
+    
+    return `${currency.symbol}${displayAmount.toFixed(2)}`
   }
 
   return { currency, updateCurrency, formatPrice, CURRENCY_OPTIONS }
@@ -101,3 +118,4 @@ export default function CurrencySettings() {
     </div>
   )
 }
+

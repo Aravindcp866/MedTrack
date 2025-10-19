@@ -1,11 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getRevenueStats, getMonthlyRevenueData, getFounderPayout } from '@/lib/api/revenue'
-import { getExpensesByCategory } from '@/lib/api/expenses'
-import { getProducts } from '@/lib/api/products'
-import { getPatients } from '@/lib/api/patients'
-import { getBills } from '@/lib/api/billing'
+import { api } from '@/lib/api-client'
 import { 
   BarChart, 
   Bar, 
@@ -30,8 +26,11 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import ConnectionTest from '@/components/ConnectionTest'
+import { useCurrency } from '@/components/CurrencySettings'
 
 export default function Dashboard() {
+  const { formatPrice } = useCurrency()
+  
   // Get current month date range
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -43,54 +42,47 @@ export default function Dashboard() {
   // Fetch data
   const { data: revenueStats, isLoading: revenueLoading, error: revenueError } = useQuery({
     queryKey: ['revenue-stats', startDate, endDate],
-    queryFn: () => getRevenueStats(startDate, endDate),
+    queryFn: () => api.getRevenueStats(),
     retry: 1,
     retryDelay: 1000,
   })
 
   const { data: monthlyData, isLoading: monthlyLoading, error: monthlyError } = useQuery({
     queryKey: ['monthly-revenue'],
-    queryFn: () => getMonthlyRevenueData(6),
+    queryFn: () => api.getRevenueByMonth(),
     retry: 1,
     retryDelay: 1000,
   })
 
   const { data: expensesByCategory, isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: ['expenses-by-category', startDate, endDate],
-    queryFn: () => getExpensesByCategory(startDate, endDate),
+    queryFn: () => api.getExpensesByCategory(),
     retry: 1,
     retryDelay: 1000,
   })
 
-  const { data: founderPayout } = useQuery({
-    queryKey: ['founder-payout', startDate, endDate],
-    queryFn: () => getFounderPayout(startDate, endDate),
-    retry: 1,
-    retryDelay: 1000,
-  })
 
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['products'],
-    queryFn: getProducts,
+    queryFn: api.getProducts,
     retry: 1,
     retryDelay: 1000,
   })
 
   const { data: patients, isLoading: patientsLoading, error: patientsError } = useQuery({
     queryKey: ['patients'],
-    queryFn: getPatients,
+    queryFn: api.getPatients,
     retry: 1,
     retryDelay: 1000,
   })
 
   const { data: bills, isLoading: billsLoading, error: billsError } = useQuery({
     queryKey: ['bills'],
-    queryFn: getBills,
+    queryFn: api.getBills,
     retry: 1,
     retryDelay: 1000,
   })
 
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`
   const formatPercentage = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`
 
   // Calculate low stock products
@@ -130,13 +122,18 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold mb-2">Database Connection Error</h2>
             <p className="mb-4">The database schema hasn&apos;t been applied yet. Please follow these steps:</p>
             <div className="text-left max-w-md mx-auto">
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Go to your Supabase dashboard</li>
-                <li>Navigate to SQL Editor</li>
-                <li>Copy and run the contents of supabase-schema-working.sql</li>
-                <li>Create a storage bucket named &quot;invoices&quot;</li>
-                <li>Refresh this page</li>
-              </ol>
+              <div className="bg-white p-4 rounded border">
+                <h4 className="font-semibold mb-2">Quick Setup:</h4>
+                <ol className="list-decimal list-inside space-y-2 text-sm">
+                  <li>Run: <code>node scripts/complete-setup.js</code> (automated setup)</li>
+                  <li>Or manually: Create <code>.env.local</code> with Supabase credentials</li>
+                  <li>Then run: <code>node scripts/apply-schema.js</code></li>
+                  <li>Refresh this page</li>
+                </ol>
+                <p className="mt-2 text-xs text-gray-600">
+                  See <code>QUICK_SETUP.md</code> for step-by-step instructions.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -177,8 +174,14 @@ export default function Dashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatPrice(revenueStats?.monthlyRevenue || 0)}
+                {formatPrice((revenueStats?.monthlyRevenue || 0) / 100)}
               </p>
+              <div className="flex items-center mt-1">
+                <span className="text-xs text-gray-500">
+                  Treatments: {formatPrice((revenueStats?.treatmentRevenue || 0) / 100)} |
+                  Inventory: {formatPrice((revenueStats?.inventoryRevenue || 0) / 100)}
+                </span>
+              </div>
               {revenueStats && (
                 <div className="flex items-center mt-1">
                   {revenueStats.revenueGrowth >= 0 ? (
@@ -204,7 +207,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Patients</p>
-              <p className="text-2xl font-bold text-gray-900">{patients?.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{revenueStats?.totalPatients || patients?.length || 0}</p>
             </div>
           </div>
         </div>
@@ -249,26 +252,26 @@ export default function Dashboard() {
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => `$${(value / 100).toFixed(0)}`} />
-              <Tooltip formatter={(value) => [formatPrice(Number(value)), '']} />
+              <YAxis tickFormatter={(value) => formatPrice(Number(value) / 100)} />
+              <Tooltip formatter={(value) => [formatPrice(Number(value) / 100), '']} />
               <Bar dataKey="revenue" fill="#4f46e5" name="Revenue" />
               <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Weekly Revenue Trend */}
+        {/* Daily Revenue Trend */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Revenue Trend</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Revenue Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={revenueStats?.weeklyRevenue.map((amount, index) => ({
-              week: `Week ${index + 1}`,
+            <LineChart data={revenueStats?.dailyRevenue?.map((amount, index) => ({
+              day: `Day ${index + 1}`,
               revenue: amount
-            }))}>
+            })) || []}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
-              <YAxis tickFormatter={(value) => `$${(value / 100).toFixed(0)}`} />
-              <Tooltip formatter={(value) => [formatPrice(Number(value)), 'Revenue']} />
+              <XAxis dataKey="day" />
+              <YAxis tickFormatter={(value) => formatPrice(Number(value) / 100)} />
+              <Tooltip formatter={(value) => [formatPrice(Number(value) / 100), 'Revenue']} />
               <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
@@ -294,7 +297,7 @@ export default function Dashboard() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => [formatPrice(Number(value)), 'Amount']} />
+              <Tooltip formatter={(value) => [formatPrice(Number(value) / 100), 'Amount']} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -303,12 +306,12 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Founder Payout</h3>
           <div className="text-center">
             <div className="text-4xl font-bold text-indigo-600 mb-2">
-              {formatPrice(founderPayout || 0)}
+              {formatPrice(((revenueStats?.monthlyRevenue || 0) * 0.2) / 100)}
             </div>
             <p className="text-gray-600 mb-4">20% of net revenue this month</p>
             <div className="bg-gray-100 rounded-lg p-4">
               <p className="text-sm text-gray-600">
-                Net Revenue: {formatPrice((revenueStats?.monthlyRevenue || 0) - (monthlyData?.[monthlyData.length - 1]?.expenses || 0))}
+                Net Revenue: {formatPrice(((revenueStats?.monthlyRevenue || 0) - (monthlyData?.[monthlyData.length - 1]?.expenses || 0)) / 100)}
               </p>
               <p className="text-sm text-gray-600">
                 Founder Share: 20%
