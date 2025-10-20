@@ -4,7 +4,6 @@ export interface Product {
   id: string
   name: string
   description: string | null
-  sku: string | null
   category: string | null
   unit_price: number
   stock_quantity: number
@@ -76,6 +75,8 @@ export interface VisitTreatment {
 }
 
 export interface Bill {
+  total_amount: number,
+  patient_name: string
   id: string
   visit_id: string
   bill_number: string
@@ -136,7 +137,6 @@ export interface Notification {
 export interface CreateProductData {
   name: string
   description?: string
-  sku?: string
   category?: string
   unit_price_cents: number
   stock_quantity: number

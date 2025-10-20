@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { 
-  LayoutDashboard, 
+  ChartSpline, 
   Package, 
   Users, 
   Receipt,
@@ -17,7 +17,7 @@ import {
 // import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/dashboard', icon: ChartSpline },
   { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
   { name: 'Patients', href: '/dashboard/patients', icon: Users },
   { name: 'Billing', href: '/dashboard/billing', icon: Receipt },
@@ -32,20 +32,20 @@ export default function Sidebar() {
   // const { signOut, profile } = useAuth()
 
   return (
-    <div className={`flex flex-col bg-gray-900 text-white transition-all duration-300 ${
+    <div className={`flex flex-col bg-gray-900 dark:bg-gray-800 text-white transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
-      <div className={`flex items-center h-16 bg-gray-800 ${isCollapsed ? 'px-2 justify-center' : 'px-4'}`}>
+      <div className={`flex items-center h-16 bg-gray-800 dark:bg-gray-900 ${isCollapsed ? 'px-2 justify-center' : 'px-4'}`}>
         {!isCollapsed && <h1 className="text-xl font-bold">ClinicSync</h1>}
         {isCollapsed && (
-          <div className="h-8 w-8 rounded-lg bg-gray-700 flex items-center justify-center">
+          <div className="h-8 w-[50px] rounded-lg p-2.5 ml-[10px] bg-gray-700 flex items-center justify-center">
             <span className="text-sm font-bold">C</span>
           </div>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`p-2 rounded-md hover:bg-gray-700 transition-colors ${
-            isCollapsed ? 'absolute top-2 right-2' : 'ml-auto'
+            isCollapsed ? 'ml-2' : 'ml-auto'
           }`}
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -66,8 +66,8 @@ export default function Sidebar() {
                   : 'px-3 py-2 w-full'
               } ${
                 isActive
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  ? 'bg-gray-700 dark:bg-gray-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 dark:hover:bg-gray-600 hover:text-white'
               }`}
               title={isCollapsed ? item.name : undefined}
             >

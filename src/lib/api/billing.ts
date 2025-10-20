@@ -4,11 +4,21 @@ import { Bill, BillItem, Patient, Visit } from '../types'
 export async function getBills(): Promise<Bill[]> {
   const { data, error } = await supabase
     .from('bills')
-    .select('*')
+    .select(`
+      *,
+      patient:patients(first_name, last_name, phone)
+    `)
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data || []
+  
+  // Transform data to include patient_name for backward compatibility
+  const billsWithPatientNames = data?.map(bill => ({
+    ...bill,
+    patient_name: bill.patient ? `${bill.patient.first_name} ${bill.patient.last_name}` : bill.patient_name
+  })) || []
+  
+  return billsWithPatientNames
 }
 
 export async function getBill(id: string): Promise<Bill | null> {
@@ -65,14 +75,21 @@ export async function createBill(visitId: string): Promise<Bill> {
   const tax = Math.round(subtotal * 0.1) // 10% tax
   const total = subtotal + tax
 
-  // Generate bill number
+  // Get patient name
+  const patientName = visit.patient ? 
+    `${visit.patient.first_name} ${visit.patient.last_name}` : 
+    'Unknown Patient'
+
+  // Generate bill number with patient name
   const { data: billNumber } = await supabase.rpc('generate_bill_number')
 
-  // Create bill
+  // Create bill with patient information
   const { data: bill, error: billError } = await supabase
     .from('bills')
     .insert({
       visit_id: visitId,
+      patient_id: visit.patient_id,
+      patient_name: patientName,
       bill_number: billNumber,
       subtotal_cents: subtotal,
       tax_cents: tax,

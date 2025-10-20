@@ -66,8 +66,8 @@ export default function CurrencySettings() {
   const { currency, updateCurrency, CURRENCY_OPTIONS } = useCurrency()
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
         <Settings className="w-5 h-5 mr-2" />
         Currency Settings
       </h2>
@@ -79,8 +79,8 @@ export default function CurrencySettings() {
               key={option.code}
               className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                 currency.currency === option.code
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
               <input
@@ -92,10 +92,10 @@ export default function CurrencySettings() {
                 className="sr-only"
               />
               <div className="flex items-center">
-                <Icon className="w-5 h-5 mr-3 text-gray-600" />
+                <Icon className="w-5 h-5 mr-3 text-gray-600 dark:text-gray-400" />
                 <div>
-                  <div className="font-medium text-gray-900">{option.name}</div>
-                  <div className="text-sm text-gray-500">{option.code} - {option.symbol}</div>
+                  <div className="font-medium text-gray-900 dark:text-white">{option.name}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{option.code} - {option.symbol}</div>
                 </div>
               </div>
               {currency.currency === option.code && (
@@ -107,11 +107,11 @@ export default function CurrencySettings() {
           )
         })}
       </div>
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600">
+      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           <strong>Current Currency:</strong> {currency.symbol} {currency.currency}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           This setting will be applied to all monetary values throughout the application.
         </p>
       </div>

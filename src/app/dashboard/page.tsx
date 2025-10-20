@@ -3,8 +3,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api-client'
 import { 
-  BarChart, 
-  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -17,16 +15,18 @@ import {
   Cell
 } from 'recharts'
 import { 
-  DollarSign, 
   Users, 
   Package, 
   FileText, 
   TrendingUp, 
   TrendingDown,
-  AlertTriangle
+  AlertTriangle,
+  IndianRupeeIcon
 } from 'lucide-react'
 import ConnectionTest from '@/components/ConnectionTest'
 import { useCurrency } from '@/components/CurrencySettings'
+import Breadcrumbs from '@/components/ui/Breadcrumbs'
+import { CardSkeleton } from '@/components/ui/Skeleton'
 
 export default function Dashboard() {
   const { formatPrice } = useCurrency()
@@ -94,17 +94,18 @@ export default function Dashboard() {
 
   if (revenueLoading || monthlyLoading || expensesLoading || productsLoading || patientsLoading || billsLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <Breadcrumbs />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              <CardSkeleton key={i} />
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-96 bg-gray-200 rounded"></div>
-            <div className="h-96 bg-gray-200 rounded"></div>
+            {[...Array(2)].map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         </div>
       </div>
@@ -155,10 +156,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <Breadcrumbs />
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Overview of your clinic&apos;s performance</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Overview of your clinic&apos;s performance</p>
         <div className="mt-4">
           <ConnectionTest />
         </div>
@@ -166,18 +168,18 @@ export default function Dashboard() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <IndianRupeeIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((revenueStats?.monthlyRevenue || 0) / 100)}
               </p>
               <div className="flex items-center mt-1">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   Treatments: {formatPrice((revenueStats?.treatmentRevenue || 0) / 100)} |
                   Inventory: {formatPrice((revenueStats?.inventoryRevenue || 0) / 100)}
                 </span>
@@ -200,44 +202,44 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Patients</p>
-              <p className="text-2xl font-bold text-gray-900">{revenueStats?.totalPatients || patients?.length || 0}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Patients</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{revenueStats?.totalPatients || patients?.length || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Package className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <Package className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Products</p>
-              <p className="text-2xl font-bold text-gray-900">{products?.length || 0}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Products</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{products?.length || 0}</p>
               {lowStockProducts.length > 0 && (
                 <div className="flex items-center mt-1">
-                  <AlertTriangle className="h-4 w-4 text-red-500 mr-1" />
-                  <span className="text-sm text-red-600">{lowStockProducts.length} low stock</span>
+                  <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400 mr-1" />
+                  <span className="text-sm text-red-600 dark:text-red-400">{lowStockProducts.length} low stock</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <FileText className="h-6 w-6 text-orange-600" />
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+              <FileText className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending Bills</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingBills.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Bills</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{pendingBills.length}</p>
             </div>
           </div>
         </div>
@@ -246,23 +248,39 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Monthly Revenue vs Expenses */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue vs Expenses</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Revenue vs Expenses</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
+            <LineChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis tickFormatter={(value) => formatPrice(Number(value) / 100)} />
               <Tooltip formatter={(value) => [formatPrice(Number(value) / 100), '']} />
-              <Bar dataKey="revenue" fill="#4f46e5" name="Revenue" />
-              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-            </BarChart>
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#4f46e5" 
+                strokeWidth={3}
+                name="Revenue" 
+                dot={{ fill: '#4f46e5', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="expenses" 
+                stroke="#ef4444" 
+                strokeWidth={3}
+                name="Expenses" 
+                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Daily Revenue Trend */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Revenue Trend</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Daily Revenue Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueStats?.dailyRevenue?.map((amount, index) => ({
               day: `Day ${index + 1}`,
@@ -280,16 +298,18 @@ export default function Dashboard() {
 
       {/* Expenses by Category and Founder Payout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Expenses by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Expenses by Category</h3>
+          <ResponsiveContainer width="100%" height={500}>
             <PieChart>
               <Pie
                 data={expensesByCategory}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                outerRadius={80}
+                label={({ category }) => `${category}`}
+                labelLine={true}
+                innerRadius={80}
+                outerRadius={150}
                 fill="#8884d8"
                 dataKey="total"
               >
@@ -301,20 +321,16 @@ export default function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Founder Payout</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Founder Payout</h3>
           <div className="text-center">
-            <div className="text-4xl font-bold text-indigo-600 mb-2">
+            <div className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
               {formatPrice(((revenueStats?.monthlyRevenue || 0) * 0.2) / 100)}
             </div>
-            <p className="text-gray-600 mb-4">20% of net revenue this month</p>
-            <div className="bg-gray-100 rounded-lg p-4">
-              <p className="text-sm text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">20% of net revenue this month</p>
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Net Revenue: {formatPrice(((revenueStats?.monthlyRevenue || 0) - (monthlyData?.[monthlyData.length - 1]?.expenses || 0)) / 100)}
-              </p>
-              <p className="text-sm text-gray-600">
-                Founder Share: 20%
               </p>
             </div>
           </div>

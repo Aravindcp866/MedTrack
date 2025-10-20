@@ -10,9 +10,9 @@ import { api, apiRequest } from '@/lib/api-client'
 import { CreatePatientData } from '@/lib/types'
 import { useCurrency } from '@/components/CurrencySettings'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import ConfirmationPopup from '@/components/ui/ConfirmationPopup'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
-import { FileText, Download, Send, CheckCircle, Clock, AlertCircle, Search, Plus, User, X, Edit, Save, Package, Trash2 } from 'lucide-react'
+import { useConfirmDialog } from '@/hooks/useConfirmDialog'
+import { FileText, Send, CheckCircle, Clock, AlertCircle, Search, Plus, User, X, Edit, Save, Package, Trash2, ExternalLink, Eye, IndianRupee } from 'lucide-react'
 
 export default function BillingPage() {
   const { formatPrice } = useCurrency()
@@ -38,10 +38,7 @@ export default function BillingPage() {
   const [visitNotes, setVisitNotes] = useState('')
   const [editingBill, setEditingBill] = useState<string | null>(null)
   const [editAmount, setEditAmount] = useState('')
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{id: string; name: string} | null>(null)
-  const [showItemDeleteConfirm, setShowItemDeleteConfirm] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<{id: string; description: string} | null>(null)
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog()
   const [showInventorySelection, setShowInventorySelection] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<Array<{
     product_id: string;
@@ -75,6 +72,7 @@ export default function BillingPage() {
     queryFn: () => currentBillId ? getBillItems(currentBillId) : Promise.resolve([]),
     enabled: !!currentBillId,
   })
+ 
 
   const filteredPatients = patients?.filter(patient => 
     patient.phone?.includes(searchPhone) || 
@@ -252,23 +250,16 @@ export default function BillingPage() {
     setSelectedProducts(selectedProducts.filter(p => p.product_id !== productId))
   }
 
-  const handlePriceUpdate = (productId: string, newPrice: number) => {
-    const updated = selectedProducts.map(p => 
-      p.product_id === productId ? { ...p, updated_price: newPrice } : p
-    )
-    setSelectedProducts(updated)
-  }
 
   const handleDeleteItemClick = (itemId: string, itemDescription: string) => {
-    setItemToDelete({ id: itemId, description: itemDescription })
-    setShowItemDeleteConfirm(true)
-  }
-
-  const handleConfirmDeleteItem = () => {
-    if (itemToDelete) {
-      deleteBillItemMutation.mutate(itemToDelete.id)
-      setItemToDelete(null)
-    }
+    showConfirm({
+      title: 'Delete Bill Item',
+      message: `Are you sure you want to delete "${itemDescription}" from this bill?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: () => deleteBillItemMutation.mutate(itemId)
+    })
   }
 
   const handleSaveInventoryItems = async () => {
@@ -422,12 +413,12 @@ export default function BillingPage() {
 }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center ">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Billing Management</h1>
-            <p className="text-gray-600">Manage invoices and payments</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Billing Management</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage invoices and payments</p>
           </div>
           <button
             onClick={() => setShowPatientSearch(true)}
@@ -442,16 +433,16 @@ export default function BillingPage() {
       {/* Patient Search Modal */}
       {showPatientSearch && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-200">
-            <h2 className="text-xl font-bold mb-4">Find Patient</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Find Patient</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Search by Phone Number or Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search by Phone Number or Name</label>
                 <div className="mt-1 relative">
                   <input
                     type="text"
                     placeholder="Enter phone number or patient name..."
-                    className="block w-full border border-gray-300 rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={searchPhone}
                     onChange={(e) => setSearchPhone(e.target.value)}
                   />
@@ -470,21 +461,21 @@ export default function BillingPage() {
                           setShowPatientSearch(false)
                           setSearchPhone('')
                         }}
-                        className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 last:border-b-0"
                       >
                         <div className="flex items-center">
-                          <User className="h-5 w-5 text-gray-400 mr-3" />
+                          <User className="h-5 w-5 text-gray-400 dark:text-white mr-3" />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {patient.first_name} {patient.last_name}
                             </div>
-                            <div className="text-sm text-gray-500">{patient.phone}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{patient.phone}</div>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-3 text-sm text-gray-500 text-center">
+                    <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                       No patients found
                     </div>
                   )}
@@ -506,7 +497,7 @@ export default function BillingPage() {
                     setShowPatientSearch(false)
                     setSearchPhone('')
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -519,12 +510,12 @@ export default function BillingPage() {
       {/* Add New Patient Modal */}
       {showAddPatient && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add New Patient</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Patient</h2>
               <button
                 onClick={() => setShowAddPatient(false)}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                className="text-black dark:text-white hover:text-gray-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -535,21 +526,21 @@ export default function BillingPage() {
             }} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">First Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name *</label>
                   <input
                     type="text"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={newPatient.first_name}
                     onChange={(e) => setNewPatient({ ...newPatient, first_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Last Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name *</label>
                   <input
                     type="text"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={newPatient.last_name}
                     onChange={(e) => setNewPatient({ ...newPatient, last_name: e.target.value })}
                   />
@@ -557,20 +548,20 @@ export default function BillingPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone *</label>
                   <input
                     type="tel"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={newPatient.phone}
                     onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                   <input
                     type="email"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={newPatient.email}
                     onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
                   />
@@ -580,7 +571,7 @@ export default function BillingPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddPatient(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -604,10 +595,10 @@ export default function BillingPage() {
             <div className="flex items-center">
               <User className="h-5 w-5 text-blue-600 mr-2" />
               <div>
-                <p className="text-sm font-medium text-blue-900">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
                   Selected Patient: {selectedPatient.first_name} {selectedPatient.last_name}
                 </p>
-                <p className="text-sm text-blue-700">{selectedPatient.phone}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">{selectedPatient.phone}</p>
               </div>
             </div>
             <button
@@ -622,8 +613,8 @@ export default function BillingPage() {
 
       {/* Visit Creation Form */}
       {selectedPatient && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-green-900 mb-4">Create Visit & Bill</h3>
+        <div className="mb-6 p-4 bg-green-50 rounded-lg dark:bg-gray-800">
+          <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Create Visit & Bill</h3>
           <form onSubmit={(e) => {
             e.preventDefault()
             if (visitAmount && selectedPatient) {
@@ -639,32 +630,32 @@ export default function BillingPage() {
           }} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Visit Amount ($) *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Visit Amount ($) *</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={visitAmount}
                   onChange={(e) => setVisitAmount(e.target.value)}
                   placeholder="Enter visit amount"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Visit Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Visit Date</label>
                 <input
                   type="date"
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={new Date().toISOString().split('T')[0]}
                   readOnly
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Treatment Notes</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Treatment Notes</label>
               <textarea
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                 rows={3}
                 value={visitNotes}
                 onChange={(e) => setVisitNotes(e.target.value)}
@@ -679,7 +670,7 @@ export default function BillingPage() {
                   setVisitAmount('')
                   setVisitNotes('')
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors cursor-pointer"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -696,79 +687,79 @@ export default function BillingPage() {
       )}
 
       {/* Bills List */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Invoices</h2>
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Invoices</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Invoice
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {bills?.map((bill) => (
                 <tr key={bill.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <FileText className="h-8 w-8 text-gray-400 mr-3" />
+                      <FileText className="h-5 w-5 text-gray-400 mr-3" />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {bill.bill_number}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {/* Patient name would come from join */}
-                    Patient Name
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-gray-400 mr-2" />
+                      <span className="font-medium">{bill.patient_name || 'Unknown Patient'}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {editingBill === bill.id ? (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 dark:text-white text-black">
                         <input
                           type="number"
-                          step="0.01"
-                          min="0"
-                          className="w-24 px-2 py-1 border border-gray-300 rounded text-gray-900"
+                          className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white dark:bg-gray-700"
                           value={editAmount}
                           onChange={(e) => setEditAmount(e.target.value)}
                         />
                         <button
                           onClick={handleSaveBill}
                           disabled={updateBillMutation.isPending}
-                          className="text-green-600 hover:text-green-900 cursor-pointer"
+                          className="text-green-600 hover:text-green-400 cursor-pointer"
                         >
                           <Save className="h-4 w-4" />
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="text-gray-600 hover:text-gray-900 cursor-pointer"
+                          className="text-gray-600 hover:text-gray-300 cursor-pointer"
                         >
                           <X className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2">
-                        <span>{formatPrice(bill.total_cents || 0)}</span>
+                      <div className="flex flex-row items-center space-x-2">
+                        <span className='flex items-center'> <IndianRupee className='w-5 h-4'/>{(bill.total_amount || 0)}</span>
                         <button
                           onClick={() => handleEditBill(bill)}
                           className="text-blue-600 hover:text-blue-900 cursor-pointer"
@@ -786,7 +777,7 @@ export default function BillingPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {formatDate(bill.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -804,10 +795,10 @@ export default function BillingPage() {
                     )}
                     <button
                       onClick={() => handleAddInventoryToBill(bill.id)}
-                      className="text-green-600 hover:text-green-900 cursor-pointer"
+                      className="text-white/90 hover:text-green-900 cursor-pointer"
                       title="Add Inventory Items"
                     >
-                      <Package className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setCurrentBillId(currentBillId === bill.id ? null : bill.id)}
@@ -827,9 +818,16 @@ export default function BillingPage() {
                     <button
                       onClick={() => window.open(`/api/bills/${bill.id}/pdf`, '_blank')}
                       className="text-blue-600 hover:text-blue-900 cursor-pointer"
-                      title="Download PDF"
+                      title="Open Invoice"
                     >
-                      <Download className="h-4 w-4" />
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => window.open(`/api/bills/${bill.id}/pdf?download=1`, '_blank')}
+                      className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                      title="Download Invoice"
+                    >
+                      <Send className="h-4 w-4" />
                     </button>
                     {bill.pdf_url && (
                       <button
@@ -849,10 +847,10 @@ export default function BillingPage() {
 
       {/* Bill Items Display */}
       {currentBillId && (
-        <div className="mt-6 bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">
-              Bill Items for Bill #{bills?.find(b => b.id === currentBillId)?.bill_number || currentBillId}
+        <div className="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center dark:text-white text-black">
+            <h3 className="text-lg font-medium dark:text-white text-gray-900">
+              Bill Items for {bills?.find(b => b.id === currentBillId)?.patient_name || 'Unknown Patient'} - Bill #{bills?.find(b => b.id === currentBillId)?.bill_number || currentBillId}
             </h3>
             <button
               onClick={() => setCurrentBillId(null)}
@@ -865,45 +863,46 @@ export default function BillingPage() {
           {billItems && billItems.length > 0 ? (
             <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Item
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Unit Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Total
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+             
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {billItems.map((item) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Package className="h-5 w-5 text-gray-400 mr-3" />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium dark:text-white text-gray-900">
                             {item.description}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {item.quantity}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {formatPrice(item.unit_price)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {formatPrice(item.total_price)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -933,9 +932,9 @@ export default function BillingPage() {
       {/* Inventory Selection Modal */}
       {showInventorySelection && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add Inventory Items to Bill</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add Inventory Items to Bill</h2>
               <button
                 onClick={() => {
                   setShowInventorySelection(false)
@@ -954,14 +953,14 @@ export default function BillingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Available Products */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Available Products</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-white text-black">Available Products</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {products?.map((product) => (
-                    <div key={product.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-3">
                       <div className="flex justify-between items-center">
                         <div>
-                          <h4 className="font-medium text-gray-900">{product.name}</h4>
-                          <p className="text-sm text-gray-600">
+                          <h4 className="font-medium text-gray-900 dark:text-white">{product.name}</h4>
+                          <p className="text-sm text-gray-600 dark:text-white">
                             Price: {formatPrice(product.unit_price || 0)} | 
                             Stock: {product.stock_quantity}
                           </p>
@@ -969,7 +968,7 @@ export default function BillingPage() {
                         <button
                           onClick={() => handleProductSelection(product)}
                           disabled={product.stock_quantity <= 0}
-                          className="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                          className="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm"
                         >
                           Add
                         </button>
@@ -981,7 +980,7 @@ export default function BillingPage() {
 
               {/* Selected Products */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Selected Items</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-white text-black">Selected Items</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {selectedProducts.length === 0 ? (
                     <p className="text-gray-500 text-center py-8">No items selected</p>
@@ -990,9 +989,9 @@ export default function BillingPage() {
                       <div key={product.product_id} className="border border-gray-200 rounded-lg p-3">
                         <div className="flex justify-between items-center">
                           <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{product.name}</h4>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <div className="flex items-center space-x-2">
+                            <h4 className="font-medium text-gray-900 dark:text-white">{product.name}</h4>
+                            <div className="text-sm  space-y-1 dark:text-white text-black">
+                              {/* <div className="flex items-center space-x-2">
                                 <span>Price:</span>
                                 <input
                                   type="number"
@@ -1003,20 +1002,20 @@ export default function BillingPage() {
                                   className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                                   placeholder="Price"
                                 />
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs dark:text-white text-black">
                                   (was {formatPrice(product.unit_price_cents)})
                                 </span>
-                              </div>
+                              </div> */}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 dark:text-white text-black">
                             <input
                               type="number"
                               min="1"
                               max={product.stock_quantity}
                               value={product.quantity}
                               onChange={(e) => handleQuantityChange(product.product_id, parseInt(e.target.value) || 1)}
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                              className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white dark:bg-gray-700"
                             />
                             <button
                               onClick={() => handleRemoveProduct(product.product_id)}
@@ -1026,7 +1025,7 @@ export default function BillingPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="mt-2 text-sm text-gray-600">
+                        <div className="mt-2 text-sm  dark:text-white text-black">
                           Total: {formatPrice((product.updated_price !== undefined ? product.updated_price : (product.unit_price_cents / 100)) * product.quantity)}
                         </div>
                       </div>
@@ -1035,7 +1034,7 @@ export default function BillingPage() {
                 </div>
 
                 {selectedProducts.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:text-white text-black">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Total:</span>
                       <span className="font-bold text-lg">
@@ -1060,37 +1059,17 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Unified Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          if (deleteTarget) {
-            // Add delete logic here if needed
-            setShowDeleteConfirm(false)
-            setDeleteTarget(null)
-          }
-        }}
-        title="Delete Confirmation"
-        message={`Are you sure you want to delete ${deleteTarget?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
-
-      {/* Item Delete Confirmation Popup */}
-      <ConfirmationPopup
-        isOpen={showItemDeleteConfirm}
-        onClose={() => {
-          setShowItemDeleteConfirm(false)
-          setItemToDelete(null)
-        }}
-        onConfirm={handleConfirmDeleteItem}
-        title="Remove Item from Bill"
-        message={`Are you sure you want to remove "${itemToDelete?.description}" from the bill? This action cannot be undone.`}
-        confirmText="Remove Item"
-        cancelText="Cancel"
-        type="danger"
+        isOpen={dialogState.isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        isLoading={dialogState.isLoading}
       />
 
       {/* Toast Notifications */}

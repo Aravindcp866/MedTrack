@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import chromium from '@sparticuz/chromium'
+import puppeteerCore from 'puppeteer-core'
+import puppeteer from 'puppeteer'
+
+export const runtime = 'nodejs'
 
 export async function GET(
   request: NextRequest,
@@ -32,18 +37,55 @@ export async function GET(
 
     const { bill, patient, visit, items } = {
       bill: billData,
-      patient: billData.visit.patient,
-      visit: billData.visit,
-      items: billData.bill_items,
+      patient: billData?.visit?.patient,
+      visit: billData?.visit,
+      items: billData?.bill_items,
     }
 
     // Generate HTML for PDF
     const html = generateInvoiceHTML(bill, patient, visit, items)
 
-    // Return HTML that can be printed as PDF
+    // If download flag present, return as downloadable file
+    const { searchParams } = new URL(request.url)
+    const shouldDownload = searchParams.get('download') === '1'
+
+    if (shouldDownload) {
+      // Render HTML to real PDF using headless Chromium
+      let browser
+      try {
+        const executablePath = await chromium.executablePath()
+        browser = await puppeteerCore.launch({
+          args: chromium.args,
+          executablePath,
+          headless: true,
+        })
+      } catch {
+        // Fallback to bundled Chromium if platform doesn't support @sparticuz/chromium
+        browser = await puppeteer.launch({ headless: true })
+      }
+      const page = await browser.newPage()
+      await page.setContent(html, { waitUntil: 'networkidle0' })
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '12mm', right: '12mm', bottom: '16mm', left: '12mm' },
+      })
+      await browser.close()
+
+      const filename = `Invoice-${bill.bill_number}.pdf`
+      return new NextResponse(Buffer.from(pdf), {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Cache-Control': 'no-cache',
+        },
+      })
+    }
+
+    // Return HTML preview by default
     return new NextResponse(html, {
       headers: {
-        'Content-Type': 'text/html',
+        'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache',
       },
     })
@@ -58,14 +100,14 @@ export async function GET(
 }
 
 function generateInvoiceHTML(
-  bill: { bill_number: string; subtotal_cents: number; tax_cents: number; total_cents: number; payment_status: string; created_at: string },
+  bill: { total_amount: number; bill_number: string; subtotal_cents: number; payment_status: string; created_at: string },
   patient: { first_name: string; last_name: string; email?: string; phone?: string; address?: string },
   visit: { visit_date: string },
-  items: { treatment_name: string; quantity: number; unit_price_cents: number; total_cents: number }[]
+  items: { description: string; quantity: number; unit_price: number }[]
 ): string {
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`
-  const formatDate = (dateString: string) => 
-    new Date(dateString).toLocaleDateString()
+  const formatPrice = (amount: number) => `Rs ${(amount?.toFixed(2))} /-`
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString()
+  const itemsTotal = (items || []).reduce((acc, item) => acc + (item.quantity * item.unit_price), 0)
 
   return `
     <!DOCTYPE html>
@@ -134,9 +176,15 @@ function generateInvoiceHTML(
           font-weight: bold;
           color: #4f46e5;
         }
+        th.desc, td.desc { text-align: left; }
+        th.qty, td.qty { text-align: center; width: 90px; }
+        th.num, td.num { text-align: right; width: 140px; }
         .total-section {
           margin-top: 20px;
           text-align: right;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
         .total-row {
           display: flex;
@@ -181,24 +229,24 @@ function generateInvoiceHTML(
           <div class="section-title">Bill To:</div>
           <div class="info-row">
             <span class="info-label">Name:</span>
-            ${patient.first_name} ${patient.last_name}
+            ${patient?.first_name} ${patient?.last_name}
           </div>
-          ${patient.email ? `
+          ${patient?.email ? `
           <div class="info-row">
             <span class="info-label">Email:</span>
             ${patient.email}
           </div>
           ` : ''}
-          ${patient.phone ? `
+          ${patient?.phone ? `
           <div class="info-row">
             <span class="info-label">Phone:</span>
-            ${patient.phone}
+            ${patient?.phone}
           </div>
           ` : ''}
-          ${patient.address ? `
+          ${patient?.address ? `
           <div class="info-row">
             <span class="info-label">Address:</span>
-            ${patient.address}
+            ${patient?.address}
           </div>
           ` : ''}
         </div>
@@ -207,21 +255,15 @@ function generateInvoiceHTML(
           <div class="section-title">Invoice Details:</div>
           <div class="info-row">
             <span class="info-label">Invoice #:</span>
-            ${bill.bill_number}
+            ${bill?.bill_number}
           </div>
           <div class="info-row">
             <span class="info-label">Date:</span>
-            ${formatDate(bill.created_at)}
+            ${formatDate(bill?.created_at)}
           </div>
           <div class="info-row">
             <span class="info-label">Visit Date:</span>
-            ${formatDate(visit.visit_date)}
-          </div>
-          <div class="info-row">
-            <span class="info-label">Status:</span>
-            <span style="text-transform: capitalize; color: ${bill.payment_status === 'paid' ? 'green' : 'orange'};">
-              ${bill.payment_status}
-            </span>
+            ${formatDate(visit?.visit_date)}
           </div>
         </div>
       </div>
@@ -229,19 +271,19 @@ function generateInvoiceHTML(
       <table>
         <thead>
           <tr>
-            <th>Treatment</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Total</th>
+            <th class="desc">Item</th>
+            <th class="qty">Qty</th>
+            <th class="num">Unit Price</th>
+            <th class="num">Line Total</th>
           </tr>
         </thead>
         <tbody>
-          ${items.map(item => `
+          ${(items || []).map(item => `
             <tr>
-              <td>${item.treatment_name}</td>
-              <td>${item.quantity}</td>
-              <td>${formatPrice(item.unit_price_cents)}</td>
-              <td>${formatPrice(item.total_cents)}</td>
+              <td class="desc">${item.description}</td>
+              <td class="qty">${item.quantity}</td>
+              <td class="num">${formatPrice(item.unit_price)}</td>
+              <td class="num">${formatPrice(item.quantity * item.unit_price)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -250,23 +292,18 @@ function generateInvoiceHTML(
       <div class="total-section">
         <div class="total-row">
           <span class="total-label">Subtotal:</span>
-          <span class="total-amount">${formatPrice(bill.subtotal_cents)}</span>
+          <span class="total-amount">${formatPrice(itemsTotal)}</span>
         </div>
-        <div class="total-row">
-          <span class="total-label">Tax (10%):</span>
-          <span class="total-amount">${formatPrice(bill.tax_cents)}</span>
+        <div class="">
+          <span class="total-label">Consultation & TreatmentFee:</span>
+          <span class="total-amount">${formatPrice(Number(bill.total_amount))}</span>
         </div>
-        <div class="total-row grand-total">
-          <span class="total-label">Total:</span>
-          <span class="total-amount">${formatPrice(bill.total_cents)}</span>
+          <div class="total-row grand-total">
+          <span class="total-label">Total Amount:</span>
+          <span class="total-amount">${formatPrice(Number(bill.total_amount)+ Number(itemsTotal))}</span>
         </div>
-      </div>
-
-      <div class="footer">
-        <p>Thank you for choosing our clinic. Please contact us if you have any questions.</p>
-        <p>This invoice was generated on ${new Date().toLocaleDateString()}</p>
       </div>
     </body>
     </html>
-  `
+  `;
 }
