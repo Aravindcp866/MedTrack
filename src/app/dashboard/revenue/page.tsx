@@ -15,7 +15,7 @@ import {
   LineChart,
   Line
 } from 'recharts'
-import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
+import { IndianRupeeIcon, TrendingUp, TrendingDown } from 'lucide-react'
 
 export default function RevenuePage() {
   const { formatPrice } = useCurrency()
@@ -72,22 +72,22 @@ export default function RevenuePage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Revenue Analytics</h1>
-        <p className="text-gray-600">Track your clinic&apos;s financial performance</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Revenue Analytics</h1>
+        <p className="text-gray-600 dark:text-gray-400">Track your clinic&apos;s financial performance</p>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+              <IndianRupeeIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((revenueStats?.monthlyRevenue || 0) / 100)}
               </p>
               {revenueStats && (
@@ -108,42 +108,42 @@ export default function RevenuePage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <IndianRupeeIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((revenueStats?.totalRevenue || 0) / 100)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <IndianRupeeIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Previous Month</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Previous Month</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((revenueStats?.previousMonthRevenue || 0) / 100)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-orange-600" />
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+              <IndianRupeeIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Founder Payout</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Founder Payout</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatPrice((founderPayout || 0) / 100)}
               </p>
             </div>
@@ -154,8 +154,8 @@ export default function RevenuePage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Monthly Revenue vs Expenses */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue vs Expenses</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Revenue vs Expenses</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -169,8 +169,8 @@ export default function RevenuePage() {
         </div>
 
         {/* Weekly Revenue Trend */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Revenue Trend</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Weekly Revenue Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueStats?.weeklyRevenue.map((amount, index) => ({
               week: `Week ${index + 1}`,
@@ -187,8 +187,8 @@ export default function RevenuePage() {
       </div>
 
       {/* Expenses by Category */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Expenses by Category</h3>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Expenses by Category</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={expensesByCategory}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -201,35 +201,35 @@ export default function RevenuePage() {
         
         {/* Expenses by Category Table */}
         <div className="mt-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-3">Category Breakdown</h4>
+          <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">Category Breakdown</h4>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Percentage
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {expensesByCategory?.map((expense) => {
                   const total = expensesByCategory.reduce((sum, item) => sum + item.total, 0)
                   const percentage = total > 0 ? ((expense.total / total) * 100).toFixed(1) : 0
                   return (
                     <tr key={expense.category}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white capitalize">
                         {expense.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                         {formatPrice(Number(expense.total) / 100)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                         {percentage}%
                       </td>
                     </tr>
@@ -239,6 +239,7 @@ export default function RevenuePage() {
             </table>
           </div>
         </div>
+        <div className='text-2xl font-bold text-gray-900 dark:text-white'> {expensesByCategory && expensesByCategory.reduce((sum, item) => sum + item.total, 0) / 100} </div>
       </div>
     </div>
   )

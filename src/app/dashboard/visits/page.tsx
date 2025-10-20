@@ -93,9 +93,9 @@ export default function VisitsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Visit Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Visit Management</h1>
         <button
           onClick={() => setShowAddForm(true)}
           className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
@@ -108,14 +108,14 @@ export default function VisitsPage() {
       {/* Add Visit Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Create New Visit</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Create New Visit</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Patient</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Patient</label>
                 <select
                   required
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={selectedPatient}
                   onChange={(e) => setSelectedPatient(e.target.value)}
                 >
@@ -129,7 +129,7 @@ export default function VisitsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Treatments</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Treatments</label>
                 <div className="mt-2 space-y-2">
                   {treatments?.map((treatment) => (
                     <div key={treatment.id} className="flex items-center justify-between">
@@ -177,9 +177,9 @@ export default function VisitsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                 <textarea
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   rows={3}
                   value={visitNotes}
                   onChange={(e) => setVisitNotes(e.target.value)}
@@ -190,7 +190,7 @@ export default function VisitsPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -208,13 +208,13 @@ export default function VisitsPage() {
       )}
 
       {/* Visits List */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Recent Visits</h2>
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recent Visits</h2>
         </div>
         <div className="p-6">
-          <div className="text-center text-gray-500">
-            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
             <p>No visits found. Create a new visit to get started.</p>
           </div>
         </div>

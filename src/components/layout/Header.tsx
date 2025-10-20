@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
-import ThemeToggle from '@/components/ThemeToggle'
+// import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Header() {
   const router = useRouter()
@@ -35,7 +35,7 @@ export default function Header() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {user?.email || 'User'}

@@ -213,19 +213,19 @@ export default function PatientDetailPage() {
       {/* Patient Information */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Information */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <User className="w-5 h-5 mr-2" />
             Basic Information
           </h2>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.first_name}
                     onChange={(e) => setEditedPatient({ ...editedPatient, first_name: e.target.value })}
                   />
@@ -234,11 +234,11 @@ export default function PatientDetailPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.last_name}
                     onChange={(e) => setEditedPatient({ ...editedPatient, last_name: e.target.value })}
                   />
@@ -249,11 +249,11 @@ export default function PatientDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
                 {isEditing ? (
                   <input
                     type="date"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.date_of_birth}
                     onChange={(e) => setEditedPatient({ ...editedPatient, date_of_birth: e.target.value })}
                   />
@@ -264,10 +264,10 @@ export default function PatientDetailPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Gender</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
                 {isEditing ? (
                   <select
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.gender}
                     onChange={(e) => setEditedPatient({ ...editedPatient, gender: e.target.value })}
                   >
@@ -285,18 +285,18 @@ export default function PatientDetailPage() {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Phone className="w-5 h-5 mr-2" />
             Contact Information
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
               {isEditing ? (
                 <input
                   type="email"
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={editedPatient.email}
                   onChange={(e) => setEditedPatient({ ...editedPatient, email: e.target.value })}
                 />
@@ -308,11 +308,11 @@ export default function PatientDetailPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
               {isEditing ? (
                 <input
                   type="tel"
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={editedPatient.phone}
                   onChange={(e) => setEditedPatient({ ...editedPatient, phone: e.target.value })}
                 />
@@ -324,10 +324,10 @@ export default function PatientDetailPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
               {isEditing ? (
                 <textarea
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   value={editedPatient.address}
                   onChange={(e) => setEditedPatient({ ...editedPatient, address: e.target.value })}
                 />
@@ -342,8 +342,8 @@ export default function PatientDetailPage() {
         </div>
 
         {/* Medical Information */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Heart className="w-5 h-5 mr-2" />
             Medical History
           </h2>
@@ -365,17 +365,17 @@ export default function PatientDetailPage() {
         </div>
 
         {/* Allergies & Emergency Contact */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <AlertTriangle className="w-5 h-5 mr-2" />
             Allergies & Emergency Contact
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Allergies</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Allergies</label>
               {isEditing ? (
                 <textarea
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                   rows={3}
                   value={editedPatient.allergies}
                   onChange={(e) => setEditedPatient({ ...editedPatient, allergies: e.target.value })}
@@ -388,11 +388,11 @@ export default function PatientDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Emergency Contact Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Contact Name</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.emergency_contact_name}
                     onChange={(e) => setEditedPatient({ ...editedPatient, emergency_contact_name: e.target.value })}
                   />
@@ -401,11 +401,11 @@ export default function PatientDetailPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Emergency Contact Phone</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Contact Phone</label>
                 {isEditing ? (
                   <input
                     type="tel"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-white dark:bg-gray-700"
                     value={editedPatient.emergency_contact_phone}
                     onChange={(e) => setEditedPatient({ ...editedPatient, emergency_contact_phone: e.target.value })}
                   />
@@ -418,8 +418,8 @@ export default function PatientDetailPage() {
         </div>
 
         {/* Visit Information */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <Stethoscope className="w-5 h-5 mr-2" />
             Visit Information
           </h2>

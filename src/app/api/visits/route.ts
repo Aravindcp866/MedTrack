@@ -66,7 +66,17 @@ export async function POST(request: NextRequest) {
 
     // If amount is provided, create a bill
     if (visitData.amount && visitData.amount > 0) {
-      const billNumber = `BILL-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+      // Get patient information for bill
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('first_name, last_name')
+        .eq('id', visitData.patient_id)
+        .single()
+
+      const patientName = patient ? `${patient.first_name} ${patient.last_name}` : 'Unknown Patient'
+      
+      // Generate bill number with patient name
+      const billNumber = `${patientName.replace(/\s+/g, '')}-Bill-${Date.now().toString().slice(-6)}`
       const amount = visitData.amount
       const tax = amount * 0.1 // 10% tax
       const total = amount + tax
@@ -75,6 +85,7 @@ export async function POST(request: NextRequest) {
         .from('bills')
         .insert({
           patient_id: visitData.patient_id,
+          patient_name: patientName,
           visit_id: visit.id,
           bill_number: billNumber,
           total_amount: total,

@@ -18,6 +18,28 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+
+        <link rel="icon" href="/favicon.png" type="image/svg+xml" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.add('light');
+                  }
+                } catch (e) {
+                  document.documentElement.classList.add('light');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
